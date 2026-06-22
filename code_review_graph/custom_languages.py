@@ -300,9 +300,12 @@ def _validate_entry(
 
     # Probe the grammar last (it is the expensive check).  Parser objects
     # themselves are created lazily by CodeParser._get_parser.
+    # Use broad Exception: tslp 0.x raises LookupError for unknown grammars;
+    # tslp 1.x raises a C-extension DownloadError whose import path differs
+    # from the tslp.DownloadError symbol, so isinstance checks are unreliable.
     try:
         tslp.get_language(grammar)  # type: ignore[arg-type]
-    except (LookupError, ValueError, ImportError, OSError) as exc:
+    except Exception as exc:
         logger.warning(
             "%s: custom language %r: grammar %r is not available in "
             "tree_sitter_language_pack (%s) — skipping",
