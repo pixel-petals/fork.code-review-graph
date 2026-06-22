@@ -270,8 +270,13 @@ class TestParserIntegration:
         assert (f"{file_path}::add", f"{file_path}::helper") in calls
         # add(P, F) inside the anonymous fun passed to lists:map.
         assert (f"{file_path}::scale", f"{file_path}::add") in calls
-        # Remote call keeps its qualified module:function form.
-        assert (f"{file_path}::scale", "lists:map") in calls
+        # tslp >=1.x erlang grammar wraps remote calls in a `remote` node, so
+        # the generic walker extracts the inner call atom ("map") rather than
+        # the qualified "lists:map" produced by the 0.x grammar.
+        assert (
+            (f"{file_path}::scale", "lists:map") in calls  # tslp 0.x
+            or (f"{file_path}::scale", "map") in calls     # tslp 1.x (remote node)
+        )
 
         imports = {e.target for e in edges if e.kind == "IMPORTS_FROM"}
         assert "lists" in imports
